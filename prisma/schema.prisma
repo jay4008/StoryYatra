@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  googleId    String?  @unique
+  appleId     String?  @unique
+  email       String?  @unique // Apple "hide my email" mein relay email aata hai, ya kabhi nahi bhi
+  name        String?
+  photoUrl    String?
+  createdAt   DateTime @default(now())
+  lastLoginAt DateTime @default(now())
+  reviews     Review[]
+
+  @@map("users")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  bookSlug  String
+  rating    Int
+  text      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookSlug])
+  @@index([bookSlug, updatedAt])
+  @@map("reviews")
+}
+
+// One row per part. A story's total is the sum of its parts, kept in StoryView for fast reads.
+model PartView {
+  bookSlug String
+  part     Int
+  count    Int    @default(0)
+
+  @@id([bookSlug, part])
+  @@map("part_views")
+}
+
+// Who was last counted for a part. The key is a keyed hash, never a raw device id or IP.
+model PartViewer {
+  bookSlug      String
+  part          Int
+  viewerKey     String
+  lastCountedAt DateTime @default(now())
+
+  @@id([bookSlug, part, viewerKey])
+  @@index([lastCountedAt])
+  @@map("part_viewers")
+}
+
+model StoryView {
+  bookSlug String @id
+  count    Int    @default(0)
+
+  @@map("story_views")
+}
