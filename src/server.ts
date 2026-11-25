@@ -3,6 +3,7 @@ import express from "express";
 import "express-async-errors"; // routes that reject reach the error handler instead of crashing the process
 import { env } from "./env";
 import { prisma } from "./lib/db";
+import { appVersionRouter } from "./routes/appVersion";
 import { authRouter } from "./routes/auth";
 import { storiesRouter } from "./routes/stories";
 
@@ -21,6 +22,7 @@ app.get("/health", async (_req, res) => {
   }
 });
 
+app.use(appVersionRouter);
 app.use(authRouter);
 app.use(storiesRouter);
 
